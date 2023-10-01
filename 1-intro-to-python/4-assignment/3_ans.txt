@@ -1,0 +1,52 @@
+a. Write the difference between List and Dictionary of Python.
+Ans: Inbuilt data structures in Python used to store data include lists and dictionaries. In contrast to dictionaries, which store data in key-value pairs, lists are linear in nature. We shall examine the differences between the two in this essay.
+
+Python lists:
+Similar to arrays, lists are declared in various languages. The fact that lists are not necessarily homogeneous makes them a very effective tool in Python. Objects, Strings, and data types like Integers can all be found in a single list. Since lists can be changed after they are created, they can.
+
+Example:
+
+nums = [1, 2, 3, 4, 5]
+
+print(*nums)
+
+Python-based dictionary:
+As opposed to other data types that can only hold a single value as an element, the Python Dictionary can hold both a key and a value. It is used to store data values like a map. The dictionary includes key-value pairs to help it become more efficient. In a dictionary, each key-value pair is separated by a colon (:), whereas each key is separated by a 'comma'.
+
+Example:
+user = {
+    'name': 'Sawon',
+    'age': '25',
+    'hobby': 'Gardening',
+    'Favorite Food': 'Beef'
+}
+
+print(user)
+
+
+b. Write about *args and **kwargs of Python with proper examples.
+Ans: 
+*args: A function definition in Python can accept a variable number of non-keyword (positional) arguments by using a specific syntax known as *args. It enables you to call a function with any number of arguments without having to declare each one as a formal parameter. These additional arguments are gathered into a tuple by the *args parameter and can then be handled by the function.
+
+Here is a example of *args' operation :
+
+def fun(arg1, *args):
+    print("arg1->", arg1)
+    print("*args->", args)
+
+fun(1, 2, 3, 4, 5, 6)
+
+**kwargs: A function definition in Python can accept a variable number of keyword arguments by using the special syntax **kwargs. Without having to declare each term as a formal parameter, you can provide any number of keyword arguments to a function. These additional keyword arguments are compiled into a dictionary by the **kwargs parameter, where the keys are the argument names and the values are their corresponding values.
+
+Here is a example of *kwargs' operation :
+
+def fun(arg1, **kwargs):
+    print("arg1->", arg1)
+    print("**kwargs->", kwargs)
+
+fun(arg1=1, arg2=2, arg3=3)
+
+
+
+
+
