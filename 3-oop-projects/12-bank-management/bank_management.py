@@ -1,8 +1,7 @@
-from abc import ABC, abstractclassmethod
 from time import sleep
 
 
-class Bank_account(ABC):
+class Bank_account():
     accounts = []
 
     def __init__(self, name, email, password, address, ac_type):
@@ -16,9 +15,9 @@ class Bank_account(ABC):
         self.loan_condition = True
         self.loan = 0
         self.total_bank_loan = 0
-        self.account_no = self.name+'-'+str(len(self.address))
+        self.account_no = self.name+'-'+str(len(self.name))
         self.transaction = []
-        self.limit = 2
+        self.limit = []
         Bank_account.accounts.append(self)
 
     def deposit(self, amount):
@@ -45,7 +44,7 @@ class Bank_account(ABC):
                 print("\nWithdrawing.....Please wait....")
                 sleep(1)
                 print(
-                    f"\nWithdrew ${amount} from your account successfully!\n New balance: ${self.balance}")
+                    f"\nWithdrew ${amount} from your account successfully!\nNew balance: ${self.balance}")
                 trn = f"You have withdrawn ${amount}"
                 self.transaction.append(trn)
             else:
@@ -54,19 +53,22 @@ class Bank_account(ABC):
             print("\nWithdrawal amount exceeded\n")
 
     def take_loan(self, amount):
-        # print(AdminAccount.loan_condition_admin)
-        if amount > self.bank_balance or self.limit == 0:
-            print("Sorry, loan failed!\n")
+        if amount > self.bank_balance or len(self.limit) >= 2:
+            if amount > self.bank_balance:
+                print("Sorry, loan failed!\n")
+            else:
+                print("You can take loan maximum 2 times!\n")
 
         else:
             self.balance += amount
             self.loan += amount
             self.bank_balance -= amount
             self.total_bank_loan += amount
-            trn = f"You have taken ${amount} loan"
+            trn = f"You have taken ${amount} loan from the bank!"
             self.transaction.append(trn)
-            print(f"You have taken ${amount} loan from the bank!\n")
-            self.limit -= 1
+            print(trn)
+            self.limit.append(trn)
+            # print(len(self.limit))
 
     def transaction_complete(self):
         for t in self.transaction:
@@ -97,6 +99,7 @@ class Bank_account(ABC):
                         break
                     else:
                         print("You don't have enough balance!")
+                        flag = 0
                         break
             if flag == 1:
                 print("Account does not exist!\n")
@@ -110,7 +113,7 @@ class AdminAccount(Bank_account):
         print(f'\n{"*"*70}\n')
         print(f" >>>    Infos of Bangla Bank\n")
         print(
-            f'\n\tTotal Bank balance : {self.bank_balance}\t\tTotal Bank Loan : {self.total_bank_loan}\n')
+            f'\n\tTotal Bank balance : {self.cur_bank_balance()}\t\tTotal Bank Loan : {self.cur_bank_loan()}\n')
 
         total_user = 0
 
@@ -123,9 +126,52 @@ class AdminAccount(Bank_account):
 
         total_user = len(Bank_account.accounts)-counter
         print(
-            f'\n\tTotal User : {total_user}\n')
+            f'\n\tTotal User : {total_user}\\n')
 
         print(f'{"*"*70}')
+
+    def loan_feature(self):
+        status = None
+        for user in SavingsAccount.accounts:
+            if user.loan_condition == True:
+                status = "Active"
+                break
+            else:
+                status = "Disabled"
+                break
+        print(f"Current Bank loan status is {status}")
+        # print(self.loan_condition)
+
+        if status == "Active":
+            ch = input(
+                "\nDo you want to turn off loan feature for all users? (Y/N): ")
+
+            if (ch == "Y"):
+                for user in Bank_account.accounts:
+                    if user.loan_condition == True:
+                        user.loan_condition = False
+
+                print("\nPlease wait...processing...")
+                sleep(1)
+                print("\nLoan feature is turned off now!")
+                status = "Disabled"
+            else:
+                print(f"\nCurrent Bank loan status is {status}\n")
+        else:
+            ch = input(
+                "\nDo you want to turn on loan feature for all users? (Y/N): ")
+
+            if (ch == "Y"):
+                for user in Bank_account.accounts:
+                    if user.loan_condition == False:
+                        user.loan_condition = True
+
+                print("\nPlease wait...processing...")
+                sleep(1)
+                print("\nLoan feature is turned on now!")
+                status = "Active"
+            else:
+                print(f"\nCurrent Bank loan status is {status}\n")
 
     def remove_account(self, name):
         flag = 1
@@ -141,18 +187,33 @@ class AdminAccount(Bank_account):
             if flag == 1:
                 print("\nNo such user exists!\n")
 
-    def bank_balance(self):
-        b = self.bank_balance
-        for user in SavingsAccount.accounts:
-            print("sav")
-            b += user.balance
-        for user in CurrentAccount.accounts:
-            b += user.balance
+    def cur_bank_balance(self):
+        l = self.bank_balance
+        for user in Bank_account.accounts:
+            # print("getting user")
+            l += user.balance
+            l -= user.loan
+        return l
 
-        print(f'\nBank balance: {b}\n')
+    def cur_bank_loan(self):
+        b = self.total_bank_loan
+        for user in Bank_account.accounts:
+            # print("getting user")
+            b += user.loan
+        return b
 
-    def loan_condition_admin(self):
-        self.loan_condition = False
+    @staticmethod
+    def all_accounts():
+        number = 1
+        if len(Bank_account.accounts) != 0:
+            print("\n*** All Bank account holder info's *** \n")
+        else:
+            print("\n*** No users exist!\n")
+        for user in Bank_account.accounts:
+            if user.name != "admin":
+                print(
+                    f"{number} -> Username: {user.name}\tUser email: {user.email}\tUser Balance: {user.balance}\tUser Loan: {user.loan}\tUser account type: {user.ac_type}\tUser Address: {user.address}\nLoan condition: {user.loan_condition}\n")
+                number += 1
 
 
 class SavingsAccount(Bank_account):
@@ -178,9 +239,12 @@ class SavingsAccount(Bank_account):
 
 
 class CurrentAccount(Bank_account):
-    def __init__(self, name, email, password, address, ac_type, limit):
+    def __init__(self, name, email, password, address, ac_type, lim):
         super().__init__(name, email, password, address, "current")
-        self.limit = limit
+        self.lim = lim
+        for user in Bank_account.accounts:
+            self.bank_balance += user.balance
+            self.bank_balance -= user.loan
 
     def withdraw(self, amount):
         if amount > 0 and (self.balance - amount) >= self.limit:
@@ -238,6 +302,19 @@ class CurrentAccount(Bank_account):
         print(f'{"*"*70}')
 
 
+SavingsAccount('Sawon', 'mmrsawon@gmail.com', 'asd',
+               'Natore, Rajshahi', 'savings', 8)
+SavingsAccount('Sumon', 'sumon@gmail.com', 'a',
+               'Kolkata, India', 'savings', 7)
+SavingsAccount('Gopi', 'gopu@gmail.com', 'asd',
+               'Dhaka, Rajshahi', 'savings', 9)
+SavingsAccount('Zim', 'zim@gmail.com', 'asd',
+               'Bogra, Rajshahi', 'savings', 2)
+CurrentAccount('Shokal', 'sokal@gmail.com', 'asd',
+               'Rangpur', 'current', 2000)
+CurrentAccount('Zillur', 'zillur@gmail.com', 'asd',
+               'Naogaon, Rajshahi', 'current', 4000)
+
 # System run from here
 bank_user = None
 
@@ -245,6 +322,8 @@ while True:
 
     if bank_user is None:
         print("\n######## Please login/register to continue! ########")
+
+        print("\nPRESS 'X' TO EXIT!")
         choice = input("\n>>> Register/ Login (R/L): ")
         print("\n")
         if choice == "R":
@@ -264,11 +343,17 @@ while True:
                 continue
             if ac_type == "sv":
                 ir = int(input("Interest rate: "))
+                print("\nPlease  wait...processing...")
+                sleep(1)
+                print(f"\nLogged in successfully to {name} account!\n")
                 bank_user = SavingsAccount(
                     name, email, password, address, ac_type, ir)
 
             elif ac_type == "cu":
                 lm = int(input("Overdraft Limit: "))
+                print("\nPlease  wait...processing...")
+                sleep(1)
+                print(f"\nLogged in successfully to {name} account!\n")
                 bank_user = CurrentAccount(
                     name, email, password, address, ac_type, lm)
             else:
@@ -278,7 +363,11 @@ while True:
             user_name = input("User Name: ")
             password = input("Your password: ")
             if user_name == "admin" and password == "123":
-                print("\nWelcome, Admin!\n")
+                print("\nPlease  wait...Admin login processing...")
+                sleep(1)
+                print(
+                    f"\nLogged in successfully to {user_name} account!\n\n\n")
+                print("\nWelcome, MR Mighty Admin!\n")
                 bank_user = AdminAccount(
                     "admin", "admin@banglabank.com", "123", "Gulshan, Dhaka", "admin")
                 # bank_user.show_admin_panel()
@@ -296,7 +385,12 @@ while True:
                         break
                 if flag == 1:
                     print("\nNo user found!\n")
-
+        elif choice == 'X' or choice == 'x':
+            print(f"Exiting Bank...Please wait...\n")
+            sleep(1)
+            print(
+                "Exited successful!\nHave a nice day and remember to payback your loans!\n")
+            break
         else:
             print("\nYou need to login/register to access to the bank\n")
 
@@ -331,8 +425,9 @@ while True:
                 if bank_user.loan_condition == True:
                     amount = int(input("Loan amount: "))
                     bank_user.take_loan(amount)
-                    bank_user.limit -= 1
                 else:
+                    print("\nPlease  wait...processing...")
+                    sleep(1)
                     print("\nSorry you can't take any loan right now!\n")
 
             elif choice == 5:
@@ -375,12 +470,12 @@ while True:
                 bank_user.showInfo()
 
             elif choice == 4:
-                # print(bank_user.loan_condition)
                 if bank_user.loan_condition == True:
                     amount = int(input("Loan amount: "))
                     bank_user.take_loan(amount)
-                    bank_user.limit -= 1
                 else:
+                    print("\nPlease  wait...processing...")
+                    sleep(1)
                     print("\nSorry you can't take any loan right now!\n")
 
             elif choice == 5:
@@ -408,7 +503,7 @@ while True:
         print(" \t\t3. See all user list")
         print(" \t\t4. Total bank balance")
         print(" \t\t5. Total loan")
-        print(" \t\t6. Turn off loan")
+        print(" \t\t6. Turn on/ off loan feature")
         print(" \t\t7. Add interest to savings account")
         print(" \t\t8. Log out")
 
@@ -424,6 +519,8 @@ while True:
             flag = 1
             for user in Bank_account.accounts:
                 if user.name == name:
+                    print("\nPlease  wait...processing...")
+                    sleep(1)
                     print("\nUser already exists!\n")
                     bank_user = None
                     flag = 0
@@ -434,12 +531,16 @@ while True:
                 ir = int(input("Interest rate: "))
                 SavingsAccount(
                     name, email, password, address, ac_type, ir)
+                print("\nPlease  wait...processing...")
+                sleep(1)
                 print(f"\nAccount created for {name} successfully!\n")
 
             elif ac_type == "cu":
                 lm = int(input("Overdraft Limit: "))
                 CurrentAccount(
                     name, email, password, address, ac_type, lm)
+                print("\nPlease  wait...processing...")
+                sleep(1)
                 print(f"\nAccount created for {name} successfully!\n")
             else:
                 print("\nPlease select a valid account type!\n")
@@ -449,41 +550,47 @@ while True:
             bank_user.remove_account(name)
 
         elif choice == 3:
-            number = 1
-            if len(Bank_account.accounts) != 0:
-                print("\n*** All Bank account holder info's *** \n")
-            for user in Bank_account.accounts:
-                if user.name != "admin":
-                    print(
-                        f"{number} -> Username: {user.name}\tUser Balance: {user.balance}\tUser Loan: {user.loan}\tUser Address: {user.address}")
-                    number += 1
+            bank_user.all_accounts()
 
         elif choice == 4:
-            b = bank_user.bank_balance
-            for user in Bank_account.accounts:
-                b += user.balance
+            # b = bank_user.bank_balance
+            # for user in Bank_account.accounts:
+            #     b += user.balance
 
-            print(f"Current Bank Balance: $ {b}")
+            # for user in Bank_account.accounts:
+            #     b -= user.loan
+            # AdminAccount.bank_balance = b
+            # print(f"Current Bank Balance: $ {b}")
+            print(f'\nBank balance: ${bank_user.cur_bank_balance()}\n')
 
         elif choice == 5:
-            print(f"Current Bank balance : $ {bank_user.total_bank_loan}")
+            # b = bank_user.total_bank_loan
+            # for user in Bank_account.accounts:
+            #     b += user.loan
+            # AdminAccount.total_bank_loan = b
+            # print(f"Current Bank Loan: $ {b}")
+            print(f"\nTotal Bank Loan: ${bank_user.cur_bank_loan()}\n")
 
         elif choice == 6:
-            ch = input(
-                "\nDo you want to turn off loan feature for all users? (Y/N): ")
-            if (ch == "Y"):
-                for user in Bank_account.accounts:
-                    if user.loan_condition == True:
-                        user.loan_condition = False
-
-                print("\nPlease  wait...processing...")
-                sleep(1)
-                print("\nLoan feature is turned off now!")
-                # print(bank_user.loan_condition)
-            else:
-                choice = int(input("Choose option: "))
+            bank_user.loan_feature()
 
         elif choice == 7:
+            for user in Bank_account.accounts:
+                # print('cheese')
+                # print(user)
+                # print(user.ac_type)
+                if user.ac_type == "savings":
+                    if user.balance == 0:
+                        print(f"\n{user.name}'s balance is currently 0!\n")
+                        continue
+                    b = user.balance*(user.interest_rate/100)
+                    user.balance = b+user.balance
+                    trn = f"${b} interest has been added to your account.\nYor current interest rate: ${user.interest_rate}"
+                    user.transaction.append(trn)
+                    print(
+                        f"\n${b} interest has been added to account {user.name}\n")
+
+        elif choice == 8:
             print("\nLogging out...Please wait...")
             sleep(1)
             print(f"Have a good day {bank_user.name}!")
